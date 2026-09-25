@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { MoveCategoryDto } from '../dto/move-category.dto';
 import { Category } from '../models/category.schema';
 import { CATEGORY_ROUTES } from '../routes/category.routes';
 import { CategoryService } from '../services/category.service';
@@ -12,7 +13,8 @@ export class CategoryController {
 
   @Get()
   async findAll() {
-    return ok(await this.categoryService.findAll());
+    // 返回树版本 + 平铺列表 + 嵌套树，前端移动分类时回传 treeVersion 做乐观锁
+    return ok(await this.categoryService.getTreeSnapshot());
   }
 
   @Post()
@@ -23,5 +25,11 @@ export class CategoryController {
   @Patch(CATEGORY_ROUTES.detail)
   async update(@Param('id') id: string, @Body() payload: Partial<Category>) {
     return ok(await this.categoryService.update(id, payload), '分类已更新');
+  }
+
+  @Patch(CATEGORY_ROUTES.move)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async move(@Param('id') id: string, @Body() payload: MoveCategoryDto) {
+    return ok(await this.categoryService.moveCategory(id, payload), '分类已移动，其下级层级随之一并迁移');
   }
 }

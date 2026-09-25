@@ -7,6 +7,20 @@ import { validateFileFormat } from '../utils/fileValidator';
 import { thumbnailFromUrl } from '../utils/thumbnailGenerator';
 import { TagService } from './tag.service';
 import { StorageService } from './storage.service';
+import { CategoryService } from './category.service';
+
+export interface AssetQuery {
+  keyword?: string;
+  tag?: string;
+  status?: AssetStatus;
+  /** 浏览某分类时聚合该分类及全部下级分类中的素材 */
+  categoryId?: string;
+  /**
+   * 是否只看已发布素材。按分类浏览默认 true，
+   * 显式传 status 时以 status 为准。
+   */
+  publishedOnly?: boolean;
+}
 
 @Injectable()
 export class AssetService {
@@ -14,12 +28,19 @@ export class AssetService {
     @InjectModel(Asset.name) private readonly assetModel: Model<AssetDocument>,
     private readonly tagService: TagService,
     private readonly storageService: StorageService,
+    private readonly categoryService: CategoryService,
   ) {}
 
-  async findAll(query: { keyword?: string; tag?: string; status?: AssetStatus }) {
+  async findAll(query: AssetQuery) {
     const filter: Record<string, unknown> = {};
     if (query.status) filter.status = query.status;
+    else if (query.publishedOnly) filter.status = AssetStatus.Published;
     if (query.tag) filter.tags = query.tag;
+    if (query.categoryId) {
+      // 选择某个分类浏览时，连同所有下级分类里的素材一起返回
+      const categoryIds = await this.categoryService.findCategorySubtreeIds(query.categoryId);
+      filter.categoryId = { $in: categoryIds };
+    }
     if (query.keyword) filter.$text = { $search: query.keyword };
     return this.assetModel.find(filter).sort({ createdAt: -1 }).exec();
   }
