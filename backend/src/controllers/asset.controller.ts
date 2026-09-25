@@ -12,8 +12,13 @@ export class AssetController {
   constructor(private readonly assetService: AssetService) {}
 
   @Get()
-  async findAll(@Query('keyword') keyword?: string, @Query('tag') tag?: string, @Query('status') status?: AssetStatus) {
-    return ok(await this.assetService.findAll({ keyword, tag, status }));
+  async findAll(
+    @Query('keyword') keyword?: string,
+    @Query('tag') tag?: string,
+    @Query('status') status?: AssetStatus,
+    @Query('categoryId') categoryId?: string,
+  ) {
+    return ok(await this.assetService.findAll({ keyword, tag, status, categoryId }));
   }
 
   @Get(ASSET_ROUTES.detail)

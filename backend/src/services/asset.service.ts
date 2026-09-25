@@ -7,6 +7,14 @@ import { validateFileFormat } from '../utils/fileValidator';
 import { thumbnailFromUrl } from '../utils/thumbnailGenerator';
 import { TagService } from './tag.service';
 import { StorageService } from './storage.service';
+import { CategoryService } from './category.service';
+
+interface FindAssetsQuery {
+  keyword?: string;
+  tag?: string;
+  status?: AssetStatus;
+  categoryId?: string;
+}
 
 @Injectable()
 export class AssetService {
@@ -14,13 +22,25 @@ export class AssetService {
     @InjectModel(Asset.name) private readonly assetModel: Model<AssetDocument>,
     private readonly tagService: TagService,
     private readonly storageService: StorageService,
+    private readonly categoryService: CategoryService,
   ) {}
 
-  async findAll(query: { keyword?: string; tag?: string; status?: AssetStatus }) {
+  async findAll(query: FindAssetsQuery) {
     const filter: Record<string, unknown> = {};
-    if (query.status) filter.status = query.status;
     if (query.tag) filter.tags = query.tag;
     if (query.keyword) filter.$text = { $search: query.keyword };
+
+    if (query.categoryId) {
+      // 选中某分类时，聚合该分类及其全部下级分类的素材。
+      const categoryIds = await this.categoryService.findCategoryWithDescendantIds(query.categoryId);
+      if (!categoryIds) throw new NotFoundException('分类不存在');
+      filter.categoryId = { $in: categoryIds };
+      // 浏览场景默认只返回已发布素材；显式传入 status（如管理员排查）时尊重该条件。
+      filter.status = query.status ?? AssetStatus.Published;
+    } else if (query.status) {
+      filter.status = query.status;
+    }
+
     return this.assetModel.find(filter).sort({ createdAt: -1 }).exec();
   }
 

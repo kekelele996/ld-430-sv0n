@@ -10,6 +10,7 @@ import { ReviewController } from './controllers/review.controller';
 import { TagController } from './controllers/tag.controller';
 import { Asset, AssetSchema } from './models/asset.schema';
 import { Category, CategorySchema } from './models/category.schema';
+import { CategoryTreeRevision, CategoryTreeRevisionSchema } from './models/categoryTreeRevision.schema';
 import { Collection, CollectionSchema } from './models/collection.schema';
 import { DownloadRecord, DownloadRecordSchema } from './models/downloadRecord.schema';
 import { ReviewRecord, ReviewRecordSchema } from './models/reviewRecord.schema';
@@ -34,6 +35,7 @@ import { ValidationMiddleware } from './middlewares/validation.middleware';
     MongooseModule.forFeature([
       { name: Asset.name, schema: AssetSchema },
       { name: Category.name, schema: CategorySchema },
+      { name: CategoryTreeRevision.name, schema: CategoryTreeRevisionSchema },
       { name: Collection.name, schema: CollectionSchema },
       { name: DownloadRecord.name, schema: DownloadRecordSchema },
       { name: ReviewRecord.name, schema: ReviewRecordSchema },

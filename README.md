@@ -26,9 +26,9 @@ MinIO Console 地址：http://localhost:9001
 ## 核心接口
 
 - `GET /health`：健康检查。
-- `GET /assets`、`POST /assets`、`PATCH /assets/:id`：素材列表、上传元数据、编辑信息。
+- `GET /assets`、`POST /assets`、`PATCH /assets/:id`：素材列表（支持 `categoryId`，自动聚合所选分类及全部下级分类的已发布素材）、上传元数据、编辑信息。
 - `POST /assets/:id/publish`、`POST /assets/:id/archive`：素材发布与归档。
-- `GET /categories`、`POST /categories`：多级分类管理。
+- `GET /categories`：返回嵌套分类树与 `treeVersion`；`POST /categories`：创建分类；`PATCH /categories/:id/move`：移动分类（整个下级层级跟随，基于 `treeVersion` 做乐观并发控制；循环挂载返回 400，并发冲突返回 409 与最新层级）。
 - `GET /collections`、`POST /collections`、`PATCH /collections/:id/assets/:assetId`：收藏夹与协作素材集。
 - `POST /assets/:assetId/downloads`、`GET /downloads`：下载记录和许可校验。
 - `GET /tags`、`POST /tags`：标签管理。
